@@ -1,0 +1,16 @@
+# EasyDisenchant Changelog
+All notable changes to this project will be documented in this file.
+
+## Version 1.0.0 (07/04/2026)
+
+- First public-ready release
+- Added a compact main window for `Disenchant`, `Mill`, and `Prospect`
+- Added action-aware filters and search
+- Added row-level `Use` and blacklist controls
+- Added blacklist management window with tooltips
+- Added minimap and Addon Compartment integration
+- Added keybindings under the `EasyDisenchant` category
+- Added saved window positions and `/sde resetpos`
+- Added scroll support for the main list and blacklist
+- Refined layout, footer, headers, and item-row alignment
+- Improved Retail `120001` compatibility

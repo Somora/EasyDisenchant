@@ -1,0 +1,17 @@
+## Interface: 120001
+## Title: Somora's EasyDisenchant
+## Notes: Fast disenchant, mill, and prospect helper.
+## Author: Somora
+## Version: 1.0.0
+## SavedVariables: EasyDisenchantDB
+## IconTexture: Interface\Icons\INV_Enchant_Disenchant
+## AddonCompartmentFunc: EasyDisenchant_AddonCompartmentClick
+## AddonCompartmentFuncOnEnter: EasyDisenchant_AddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: EasyDisenchant_AddonCompartmentLeave
+
+Libs\LibStub\LibStub.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+Core.lua
+UI.lua

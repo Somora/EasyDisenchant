@@ -1,0 +1,14 @@
+<Bindings>
+    <Binding name="EASYDISENCHANT_TOGGLE_WINDOW" category="EasyDisenchant">
+        EasyDisenchant_ToggleWindow()
+    </Binding>
+    <Binding name="EASYDISENCHANT_TOGGLE_BLACKLIST" category="EasyDisenchant">
+        EasyDisenchant_ToggleBlacklist()
+    </Binding>
+    <Binding name="EASYDISENCHANT_DISENCHANT_SELECTED" category="EasyDisenchant">
+        EasyDisenchant_DispatchSelected()
+    </Binding>
+    <Binding name="EASYDISENCHANT_TOGGLE_ALL" category="EasyDisenchant">
+        EasyDisenchant_ToggleAll()
+    </Binding>
+</Bindings>
