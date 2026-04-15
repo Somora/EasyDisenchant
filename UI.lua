@@ -145,6 +145,24 @@ local function ConfigureSecureActionButton(button, item, actionKey)
     end
 end
 
+local function ClearRow(row)
+    row.item = nil
+    row:SetAlpha(0)
+    row:EnableMouse(false)
+    row.icon:SetTexture(nil)
+    row.name:SetText("")
+    row.itemLevel:SetText("")
+    row.bind:SetText("")
+    row.gold:SetText("")
+    row.silver:SetText("")
+    row.copper:SetText("")
+    row.reason:SetText("")
+    row.selection:Hide()
+    row.actionButton:SetText("")
+    row.blacklistButton:EnableMouse(false)
+    ConfigureSecureActionButton(row.actionButton, nil, EasyDisenchantDB and EasyDisenchantDB.selectedAction)
+end
+
 local function GetEmptyStateText()
     local topReason, topCount
     for reason, count in pairs(addon.state.filteredReasonCounts or {}) do
@@ -355,11 +373,13 @@ end
 local function UpdateRow(row, item, isSelected, showReason)
     row.item = item
     if not item then
-        row:Hide()
+        ClearRow(row)
         return
     end
 
-    row:Show()
+    row:SetAlpha(1)
+    row:EnableMouse(true)
+    row.blacklistButton:EnableMouse(true)
     row.icon:SetTexture(item.icon or 134400)
     row.name:SetText(item.name or UNKNOWN)
     row.itemLevel:SetText(item.itemLevel or 0)

@@ -1,6 +1,11 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.2 (15/04/2026)
+
+- Fixed a protected-action warning caused by hiding rows containing secure action buttons
+- Empty rows are now cleared visually instead of hidden during list refreshes
+
 ## Version 1.0.1 (15/04/2026)
 
 - Fixed profession action buttons by using secure spell-on-item targeting
