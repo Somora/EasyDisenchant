@@ -1,6 +1,13 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.1 (15/04/2026)
+
+- Fixed profession action buttons by using secure spell-on-item targeting
+- Removed obsolete action-flow fallback code
+- Removed obsolete vendor-price filter internals
+- Updated documentation for the secure in-window `Use` flow
+
 ## Version 1.0.0 (07/04/2026)
 
 - First public-ready release

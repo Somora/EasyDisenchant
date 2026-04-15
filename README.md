@@ -15,6 +15,7 @@ EasyDisenchant is a Retail World of Warcraft addon for quickly handling `Disench
 - Keybindings under `EasyDisenchant`
 - Combat lock overlay to prevent protected-action issues
 - Tooltips on items, blacklist entries, and column headers
+- Secure action buttons for profession spell targeting
 
 ## Commands
 
@@ -33,10 +34,13 @@ EasyDisenchant registers these bindings in WoW's Key Bindings UI:
 - `Use Selected Action`
 - `Toggle All Windows`
 
+Note: profession spell-on-item actions are performed through the secure in-window `Use` buttons. This keeps disenchanting, milling, and prospecting safe from accidental item use or equip attempts.
+
 ## Notes
 
 - `Rarity`, `Bind`, and `Item level` are only shown for `Disenchant`
 - White and gray items are hidden from excluded results for disenchanting
+- Use the row-level `Use` button or the main action button to perform the selected profession action
 - The minimap button supports:
   - Left-click: toggle main window
   - Right-click: toggle blacklist
@@ -51,4 +55,4 @@ EasyDisenchant registers these bindings in WoW's Key Bindings UI:
 
 ## Version
 
-Current release: `1.0.0`
+Current release: `1.0.1`

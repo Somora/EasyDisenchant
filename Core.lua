@@ -124,6 +124,10 @@ local function GetSpellToCast(actionKey)
     return action and action.fallbackSpell or nil
 end
 
+function addon:GetSpellToCast(actionKey)
+    return GetSpellToCast(actionKey)
+end
+
 local FILTER_REASON_LABELS = {
     RARITY = "Rarity",
     ITEM_LEVEL = "iLvl",
@@ -358,33 +362,6 @@ function addon:IsLockedByCombat()
     return InCombatLockdown() and EasyDisenchantDB.lockInCombat
 end
 
-function addon:PerformAction(item, actionKey)
-    if not item then
-        self:ShowMessage("No item selected.")
-        return
-    end
-    if self:IsLockedByCombat() then
-        self:ShowMessage("Addon is locked during combat.")
-        return
-    end
-
-    local spellName = GetSpellToCast(actionKey)
-    if not spellName then
-        self:ShowMessage("Required profession spell not found.")
-        return
-    end
-
-    if C_Spell and C_Spell.IsSpellUsable and not C_Spell.IsSpellUsable(spellName) then
-        self:ShowMessage("Selected profession action is not usable right now.")
-        return
-    end
-
-    CastSpellByName(spellName)
-    C_Timer.After(0, function()
-        C_Container.UseContainerItem(item.bagID, item.slotID)
-    end)
-end
-
 function addon:BlacklistItem(item)
     if not item then
         return
@@ -617,7 +594,7 @@ function EasyDisenchant_ToggleBlacklist()
 end
 
 function EasyDisenchant_DispatchSelected()
-    addon:PerformAction(addon:GetSelectedItem(), EasyDisenchantDB.selectedAction)
+    addon:ShowMessage("Use the EasyDisenchant window buttons to perform actions.")
 end
 
 function EasyDisenchant_ToggleAll()

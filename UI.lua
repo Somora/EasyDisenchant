@@ -105,6 +105,46 @@ local function StyleRowMiniButton(button)
     end
 end
 
+local function ConfigureSecureActionButton(button, item, actionKey)
+    if not button then
+        return
+    end
+
+    button.item = item
+    button.actionKey = actionKey
+
+    if InCombatLockdown() then
+        return
+    end
+
+    local spellName = addon.GetSpellToCast and addon:GetSpellToCast(actionKey)
+    if item and spellName then
+        local targetItem = string.format("%d %d", item.bagID, item.slotID)
+        button:SetAttribute("type", "spell")
+        button:SetAttribute("spell", spellName)
+        button:SetAttribute("target-item", targetItem)
+        button:SetAttribute("target-bag", item.bagID)
+        button:SetAttribute("target-slot", item.slotID)
+        button:SetAttribute("type1", "spell")
+        button:SetAttribute("spell1", spellName)
+        button:SetAttribute("target-item1", targetItem)
+        button:SetAttribute("target-bag1", item.bagID)
+        button:SetAttribute("target-slot1", item.slotID)
+        button:SetAttribute("useOnKeyDown", false)
+    else
+        button:SetAttribute("type", nil)
+        button:SetAttribute("spell", nil)
+        button:SetAttribute("target-item", nil)
+        button:SetAttribute("target-bag", nil)
+        button:SetAttribute("target-slot", nil)
+        button:SetAttribute("type1", nil)
+        button:SetAttribute("spell1", nil)
+        button:SetAttribute("target-item1", nil)
+        button:SetAttribute("target-bag1", nil)
+        button:SetAttribute("target-slot1", nil)
+    end
+end
+
 local function GetEmptyStateText()
     local topReason, topCount
     for reason, count in pairs(addon.state.filteredReasonCounts or {}) do
@@ -236,12 +276,13 @@ local function CreateListRow(parent, width)
     row.itemLevel:SetWidth(ILVL_WIDTH)
     row.itemLevel:SetJustifyH("RIGHT")
 
-    row.actionButton = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    row.actionButton = CreateFrame("Button", nil, row, "SecureActionButtonTemplate,UIPanelButtonTemplate")
     row.actionButton:SetSize(ACTION_WIDTH, 18)
     row.actionButton:SetPoint("RIGHT", row, "RIGHT", -(RIGHT_PADDING + BLACKLIST_WIDTH + 8), 0)
     row.actionButton:SetNormalFontObject("GameFontHighlightSmall")
     row.actionButton:SetHighlightFontObject("GameFontHighlightSmall")
     StyleRowMiniButton(row.actionButton)
+    row.actionButton:RegisterForClicks("AnyUp")
     row.actionButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         local action = addon.actions[EasyDisenchantDB.selectedAction]
@@ -252,13 +293,6 @@ local function CreateListRow(parent, width)
     row.actionButton:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
-    row.actionButton:SetScript("OnClick", function(self)
-        local parentRow = self:GetParent()
-        if parentRow and parentRow.item then
-            addon:PerformAction(parentRow.item, EasyDisenchantDB.selectedAction)
-        end
-    end)
-
     row.blacklistButton = CreateFrame("Button", nil, row, "UIPanelCloseButton")
     row.blacklistButton:SetSize(BLACKLIST_WIDTH, BLACKLIST_WIDTH)
     row.blacklistButton:SetPoint("RIGHT", -RIGHT_PADDING, 0)
@@ -311,13 +345,10 @@ local function CreateListRow(parent, width)
         if not self.item then
             return
         end
-        if mouseButton == "RightButton" then
-            addon:BlacklistItem(self.item)
-        else
+        if mouseButton == "LeftButton" then
             addon:SetSelectedItem(self.item.key)
         end
     end)
-
     return row
 end
 
@@ -337,6 +368,7 @@ local function UpdateRow(row, item, isSelected, showReason)
     row.selection:SetShown(isSelected)
     row.reason:SetText("")
     row.actionButton:SetText(GetActionButtonLabel())
+    ConfigureSecureActionButton(row.actionButton, item, EasyDisenchantDB.selectedAction)
     row.actionButton:Show()
     row.blacklistButton:Show()
     local color = ITEM_QUALITY_COLORS[item.quality or 0] or NORMAL_FONT_COLOR
@@ -725,6 +757,7 @@ function addon:RefreshUI()
 
     self.mainFrame.summary:SetText(string.format("Ready: %d  Excluded: %d", #self.state.items, #self.state.filteredOut))
     local canAct = selectedItem and not self:IsLockedByCombat()
+    ConfigureSecureActionButton(self.mainFrame.actionButton, selectedItem, EasyDisenchantDB.selectedAction)
     SetButtonState(self.mainFrame.actionButton, canAct)
     ApplyActionButtonText()
     self:RefreshCombatState()
@@ -992,14 +1025,11 @@ function addon:InitializeUI()
     frame.filteredTitle:SetText("Filtered items")
     frame.filteredTitle:Hide()
 
-    frame.actionButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    frame.actionButton = CreateFrame("Button", nil, frame, "SecureActionButtonTemplate,UIPanelButtonTemplate")
     frame.actionButton:SetSize(120, 24)
     frame.actionButton:SetPoint("BOTTOMRIGHT", -18, 18)
     StylePrimaryActionButton(frame.actionButton)
-    frame.actionButton:SetScript("OnClick", function()
-        addon:PerformAction(addon:GetSelectedItem(), EasyDisenchantDB.selectedAction)
-    end)
-
+    frame.actionButton:RegisterForClicks("AnyUp")
     frame.blacklistButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     frame.blacklistButton:SetSize(88, 24)
     frame.blacklistButton:SetPoint("RIGHT", frame.actionButton, "LEFT", -8, 0)
