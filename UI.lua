@@ -74,10 +74,8 @@ end
 
 local function SetButtonState(button, enabled)
     if enabled then
-        button:Enable()
         button:SetAlpha(1)
     else
-        button:Disable()
         button:SetAlpha(0.45)
     end
 end
@@ -148,7 +146,6 @@ end
 local function ClearRow(row)
     row.item = nil
     row:SetAlpha(0)
-    row:EnableMouse(false)
     row.icon:SetTexture(nil)
     row.name:SetText("")
     row.itemLevel:SetText("")
@@ -159,7 +156,6 @@ local function ClearRow(row)
     row.reason:SetText("")
     row.selection:Hide()
     row.actionButton:SetText("")
-    row.blacklistButton:EnableMouse(false)
     ConfigureSecureActionButton(row.actionButton, nil, EasyDisenchantDB and EasyDisenchantDB.selectedAction)
 end
 
@@ -378,8 +374,6 @@ local function UpdateRow(row, item, isSelected, showReason)
     end
 
     row:SetAlpha(1)
-    row:EnableMouse(true)
-    row.blacklistButton:EnableMouse(true)
     row.icon:SetTexture(item.icon or 134400)
     row.name:SetText(item.name or UNKNOWN)
     row.itemLevel:SetText(item.itemLevel or 0)
@@ -464,9 +458,9 @@ function addon:RefreshCombatState()
     local locked = self:IsLockedByCombat()
     self.mainFrame.combatOverlay:SetShown(locked)
     if locked then
-        self.mainFrame.actionButton:Disable()
+        self.mainFrame.actionButton:SetAlpha(0.45)
     else
-        self.mainFrame.actionButton:Enable()
+        self.mainFrame.actionButton:SetAlpha(1)
     end
 end
 

@@ -1,6 +1,10 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.3 (18/04/2026)
+
+- Fixed an additional protected-action warning caused by enabling or disabling secure action buttons during refresh
+
 ## Version 1.0.2 (15/04/2026)
 
 - Fixed a protected-action warning caused by hiding rows containing secure action buttons
