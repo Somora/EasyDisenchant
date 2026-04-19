@@ -383,8 +383,6 @@ local function UpdateRow(row, item, isSelected, showReason)
     row.reason:SetText("")
     row.actionButton:SetText(GetActionButtonLabel())
     ConfigureSecureActionButton(row.actionButton, item, EasyDisenchantDB.selectedAction)
-    row.actionButton:Show()
-    row.blacklistButton:Show()
     local color = ITEM_QUALITY_COLORS[item.quality or 0] or NORMAL_FONT_COLOR
     row.name:SetTextColor(color.r, color.g, color.b)
     if row.rowIndex and row.rowIndex % 2 == 0 then
