@@ -1,6 +1,15 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.5 (20/04/2026)
+
+- Added a slimmer gold-styled scrollbar for the main list and blacklist window
+- Added a subtle hover state to the custom scrollbars
+- Fixed main-list scrolling so it can no longer scroll past the available items
+- Clamped mouse-wheel scrolling in both scrollable lists
+- Improved excluded-item feedback with filter-reason breakdowns
+- Added clearer blacklist tooltips and a blacklist item counter
+
 ## Version 1.0.4 (19/04/2026)
 
 - Fixed a protected-action warning caused by showing secure row buttons during item-list refresh

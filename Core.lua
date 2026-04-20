@@ -306,7 +306,7 @@ function addon:RefreshItems()
         return left.name < right.name
     end)
 
-    self.state.mainScrollOffset = math.min(self.state.mainScrollOffset or 0, math.max(0, #self.state.items - 12))
+    self.state.mainScrollOffset = math.min(self.state.mainScrollOffset or 0, math.max(0, #self.state.items - 10))
 
     if self.state.selectedKey then
         local stillExists = false
@@ -356,6 +356,42 @@ end
 
 function addon:ShowMessage(text)
     UIErrorsFrame:AddMessage("|cff4cc9f0EasyDisenchant:|r " .. text, 1.0, 0.82, 0)
+end
+
+function addon:GetExcludedBreakdownText(limit)
+    local parts = {}
+    for reason, count in pairs(self.state.filteredReasonCounts or {}) do
+        if count and count > 0 then
+            parts[#parts + 1] = {
+                reason = reason,
+                count = count,
+            }
+        end
+    end
+
+    table.sort(parts, function(left, right)
+        if left.count ~= right.count then
+            return left.count > right.count
+        end
+        return left.reason < right.reason
+    end)
+
+    local shown = {}
+    local maxShown = math.min(limit or #parts, #parts)
+    for index = 1, maxShown do
+        local part = parts[index]
+        shown[#shown + 1] = string.format("%d by %s", part.count, part.reason)
+    end
+
+    if #parts > maxShown then
+        local remaining = 0
+        for index = maxShown + 1, #parts do
+            remaining = remaining + parts[index].count
+        end
+        shown[#shown + 1] = string.format("%d other", remaining)
+    end
+
+    return table.concat(shown, ", ")
 end
 
 function addon:IsLockedByCombat()

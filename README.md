@@ -55,4 +55,4 @@ Note: profession spell-on-item actions are performed through the secure in-windo
 
 ## Version
 
-Current release: `1.0.4`
+Current release: `1.0.5`

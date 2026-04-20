@@ -14,6 +14,10 @@ local ACTION_WIDTH = 24
 local BLACKLIST_WIDTH = 18
 local RIGHT_PADDING = 4
 
+local function ClampScrollOffset(offset, maxOffset)
+    return math.min(math.max(0, floor(offset or 0)), math.max(0, maxOffset or 0))
+end
+
 local function CreateBackdrop(frame)
     frame:SetBackdrop({
         bgFile = "Interface/DialogFrame/UI-DialogBox-Background-Dark",
@@ -103,6 +107,60 @@ local function StyleRowMiniButton(button)
     end
 end
 
+local function CreateStyledScrollBar(parent)
+    local scrollBar = CreateFrame("Slider", nil, parent)
+    scrollBar:SetOrientation("VERTICAL")
+    scrollBar:SetWidth(12)
+    scrollBar:SetHitRectInsets(-4, -4, 0, 0)
+    scrollBar:SetMinMaxValues(0, 0)
+    scrollBar:SetValueStep(1)
+    scrollBar:SetObeyStepOnDrag(true)
+
+    scrollBar.track = scrollBar:CreateTexture(nil, "BACKGROUND")
+    scrollBar.track:SetPoint("TOP", 0, -2)
+    scrollBar.track:SetPoint("BOTTOM", 0, 2)
+    scrollBar.track:SetWidth(5)
+    scrollBar.track:SetColorTexture(0.18, 0.15, 0.05, 0.65)
+
+    scrollBar.trackGlow = scrollBar:CreateTexture(nil, "BACKGROUND", nil, 1)
+    scrollBar.trackGlow:SetPoint("TOP", scrollBar.track, "TOP", 0, 0)
+    scrollBar.trackGlow:SetPoint("BOTTOM", scrollBar.track, "BOTTOM", 0, 0)
+    scrollBar.trackGlow:SetWidth(1)
+    scrollBar.trackGlow:SetColorTexture(0.85, 0.68, 0.16, 0.35)
+
+    scrollBar:SetThumbTexture("Interface\\Buttons\\WHITE8x8")
+    local thumb = scrollBar:GetThumbTexture()
+    if thumb then
+        thumb:SetSize(9, 30)
+        thumb:SetVertexColor(0.78, 0.60, 0.15, 0.95)
+    end
+
+    local function SetHoverState(isHovered)
+        if isHovered then
+            scrollBar.track:SetColorTexture(0.26, 0.21, 0.07, 0.8)
+            scrollBar.trackGlow:SetColorTexture(1, 0.82, 0.22, 0.7)
+            if thumb then
+                thumb:SetVertexColor(1, 0.78, 0.18, 1)
+            end
+        else
+            scrollBar.track:SetColorTexture(0.18, 0.15, 0.05, 0.65)
+            scrollBar.trackGlow:SetColorTexture(0.85, 0.68, 0.16, 0.35)
+            if thumb then
+                thumb:SetVertexColor(0.78, 0.60, 0.15, 0.95)
+            end
+        end
+    end
+
+    scrollBar:SetScript("OnEnter", function()
+        SetHoverState(true)
+    end)
+    scrollBar:SetScript("OnLeave", function()
+        SetHoverState(false)
+    end)
+
+    return scrollBar
+end
+
 local function ConfigureSecureActionButton(button, item, actionKey)
     if not button then
         return
@@ -160,16 +218,9 @@ local function ClearRow(row)
 end
 
 local function GetEmptyStateText()
-    local topReason, topCount
-    for reason, count in pairs(addon.state.filteredReasonCounts or {}) do
-        if not topCount or count > topCount then
-            topReason = reason
-            topCount = count
-        end
-    end
-
-    if topReason and topCount and topCount > 0 then
-        return string.format("No ready items. Most items are excluded by %s (%d).", topReason, topCount)
+    local breakdown = addon.GetExcludedBreakdownText and addon:GetExcludedBreakdownText(3) or ""
+    if breakdown ~= "" then
+        return "No ready items.\nExcluded: " .. breakdown
     end
 
     return "No items available for the selected action and filters."
@@ -316,7 +367,7 @@ local function CreateListRow(parent, width)
     row.blacklistButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:AddLine("Blacklist item")
-        GameTooltip:AddLine("Hide this item from the list.", 1, 1, 1)
+        GameTooltip:AddLine("Hide this item from EasyDisenchant.", 1, 1, 1)
         GameTooltip:Show()
     end)
     row.blacklistButton:SetScript("OnLeave", function()
@@ -722,8 +773,11 @@ function addon:RefreshBlacklistUI()
 
     local entries = self:GetBlacklistEntries()
     local maxOffset = math.max(0, #entries - BLACKLIST_ROWS)
-    local offset = math.min(self.state.blacklistScrollOffset or 0, maxOffset)
+    local offset = ClampScrollOffset(self.state.blacklistScrollOffset, maxOffset)
     self.state.blacklistScrollOffset = offset
+    if self.blacklistFrame.countText then
+        self.blacklistFrame.countText:SetText(string.format("%d blacklisted %s", #entries, #entries == 1 and "item" or "items"))
+    end
     for index, row in ipairs(self.blacklistFrame.rows) do
         local entry = entries[index + offset]
         if entry then
@@ -742,7 +796,7 @@ function addon:RefreshBlacklistUI()
     if self.blacklistFrame.scrollBar then
         self.blacklistFrame._updatingScroll = true
         self.blacklistFrame.scrollBar:SetMinMaxValues(0, maxOffset)
-        self.blacklistFrame.scrollBar:SetValue(math.min(offset, maxOffset))
+        self.blacklistFrame.scrollBar:SetValue(offset)
         self.blacklistFrame._updatingScroll = false
         self.blacklistFrame.scrollBar:SetShown(maxOffset > 0)
     end
@@ -758,7 +812,9 @@ function addon:RefreshUI()
     local showRarityFilter = ShouldShowRarityFilter()
     local showBindFilter = ShouldShowBindFilterSelector()
     local showItemLevelFilter = ShouldShowItemLevelFilter()
-    local offset = self.state.mainScrollOffset or 0
+    local maxOffset = math.max(0, #self.state.items - VISIBLE_ROWS)
+    local offset = ClampScrollOffset(self.state.mainScrollOffset, maxOffset)
+    self.state.mainScrollOffset = offset
 
     for index, row in ipairs(self.mainFrame.rows) do
         local item = self.state.items[index + offset]
@@ -767,7 +823,12 @@ function addon:RefreshUI()
         row.bind:SetShown(showBindColumn and item ~= nil)
     end
 
-    self.mainFrame.summary:SetText(string.format("Ready: %d  Excluded: %d", #self.state.items, #self.state.filteredOut))
+    local excludedBreakdown = self.GetExcludedBreakdownText and self:GetExcludedBreakdownText(3) or ""
+    if excludedBreakdown ~= "" then
+        self.mainFrame.summary:SetText(string.format("Ready: %d  Excluded: %d (%s)", #self.state.items, #self.state.filteredOut, excludedBreakdown))
+    else
+        self.mainFrame.summary:SetText(string.format("Ready: %d  Excluded: %d", #self.state.items, #self.state.filteredOut))
+    end
     local canAct = selectedItem and not self:IsLockedByCombat()
     ConfigureSecureActionButton(self.mainFrame.actionButton, selectedItem, EasyDisenchantDB.selectedAction)
     SetButtonState(self.mainFrame.actionButton, canAct)
@@ -797,10 +858,9 @@ function addon:RefreshUI()
     self.mainFrame.maxLevelHint:SetShown(showItemLevelFilter)
 
     if self.mainFrame.scrollBar then
-        local maxOffset = math.max(0, #self.state.items - VISIBLE_ROWS)
         self.mainFrame._updatingScroll = true
         self.mainFrame.scrollBar:SetMinMaxValues(0, maxOffset)
-        self.mainFrame.scrollBar:SetValue(math.min(offset, maxOffset))
+        self.mainFrame.scrollBar:SetValue(offset)
         self.mainFrame._updatingScroll = false
         self.mainFrame.scrollBar:SetShown(maxOffset > 0)
     end
@@ -827,10 +887,11 @@ function addon:InitializeUI()
     end)
     frame:EnableMouseWheel(true)
     frame:SetScript("OnMouseWheel", function(_, delta)
-        if not addon.state.items or #addon.state.items <= VISIBLE_ROWS then
+        local maxOffset = addon.state.items and math.max(0, #addon.state.items - VISIBLE_ROWS) or 0
+        if maxOffset <= 0 then
             return
         end
-        addon:SetMainScrollOffset((addon.state.mainScrollOffset or 0) - delta)
+        addon:SetMainScrollOffset(ClampScrollOffset((addon.state.mainScrollOffset or 0) - delta, maxOffset))
     end)
     frame:Hide()
     CreateBackdrop(frame)
@@ -854,6 +915,8 @@ function addon:InitializeUI()
 
     frame.summary = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     frame.summary:SetPoint("TOPRIGHT", -38, -18)
+    frame.summary:SetWidth(410)
+    frame.summary:SetJustifyH("RIGHT")
 
     frame.filterPanel = CreateInsetPanel(frame, 614, 110)
     frame.filterPanel:SetPoint("TOPLEFT", 18, -48)
@@ -1007,12 +1070,9 @@ function addon:InitializeUI()
 
     frame.rows = CreateScrollRows(frame.listPanel, VISIBLE_ROWS, 594, -34)
 
-    frame.scrollBar = CreateFrame("Slider", nil, frame.listPanel, "UIPanelScrollBarTemplate")
+    frame.scrollBar = CreateStyledScrollBar(frame.listPanel)
     frame.scrollBar:SetPoint("TOPRIGHT", -6, -34)
     frame.scrollBar:SetPoint("BOTTOMRIGHT", -6, 8)
-    frame.scrollBar:SetMinMaxValues(0, 0)
-    frame.scrollBar:SetValueStep(1)
-    frame.scrollBar:SetObeyStepOnDrag(true)
     frame.scrollBar:SetScript("OnValueChanged", function(_, value)
         if frame._updatingScroll then
             return
@@ -1023,6 +1083,8 @@ function addon:InitializeUI()
 
     frame.emptyState = frame.listPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableLarge")
     frame.emptyState:SetPoint("CENTER", 0, 0)
+    frame.emptyState:SetWidth(500)
+    frame.emptyState:SetJustifyH("CENTER")
     frame.emptyState:SetText("No items available for the selected action and filters.")
     frame.emptyState:Hide()
 
@@ -1048,6 +1110,15 @@ function addon:InitializeUI()
     frame.blacklistButton:SetText("Blacklist")
     frame.blacklistButton:SetScript("OnClick", function()
         addon:ToggleBlacklistWindow()
+    end)
+    frame.blacklistButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Blacklist")
+        GameTooltip:AddLine("Open the EasyDisenchant blacklist window.", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    frame.blacklistButton:SetScript("OnLeave", function()
+        GameTooltip:Hide()
     end)
 
     frame.combatOverlay = CreateFrame("Frame", nil, frame, "BackdropTemplate")
@@ -1077,10 +1148,11 @@ function addon:InitializeUI()
     blacklistFrame:EnableMouseWheel(true)
     blacklistFrame:SetScript("OnMouseWheel", function(_, delta)
         local entries = addon.GetBlacklistEntries and addon:GetBlacklistEntries() or {}
-        if #entries <= BLACKLIST_ROWS then
+        local maxOffset = math.max(0, #entries - BLACKLIST_ROWS)
+        if maxOffset <= 0 then
             return
         end
-        addon:SetBlacklistScrollOffset((addon.state.blacklistScrollOffset or 0) - delta)
+        addon:SetBlacklistScrollOffset(ClampScrollOffset((addon.state.blacklistScrollOffset or 0) - delta, maxOffset))
     end)
     blacklistFrame:Hide()
     CreateBackdrop(blacklistFrame)
@@ -1088,6 +1160,9 @@ function addon:InitializeUI()
     blacklistFrame.title = blacklistFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     blacklistFrame.title:SetPoint("TOPLEFT", 18, -16)
     blacklistFrame.title:SetText("EasyDisenchant Blacklist")
+    blacklistFrame.countText = blacklistFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    blacklistFrame.countText:SetPoint("RIGHT", blacklistFrame.close, "LEFT", -4, 1)
+    blacklistFrame.countText:SetText("0 blacklisted items")
     blacklistFrame.line = blacklistFrame:CreateTexture(nil, "ARTWORK")
     blacklistFrame.line:SetColorTexture(0.7, 0.58, 0.18, 0.28)
     blacklistFrame.line:SetPoint("TOPLEFT", 18, -38)
@@ -1131,12 +1206,9 @@ function addon:InitializeUI()
         blacklistFrame.rows[index] = row
     end
 
-    blacklistFrame.scrollBar = CreateFrame("Slider", nil, blacklistFrame, "UIPanelScrollBarTemplate")
+    blacklistFrame.scrollBar = CreateStyledScrollBar(blacklistFrame)
     blacklistFrame.scrollBar:SetPoint("TOPRIGHT", -10, -50)
     blacklistFrame.scrollBar:SetPoint("BOTTOMRIGHT", -10, 18)
-    blacklistFrame.scrollBar:SetMinMaxValues(0, 0)
-    blacklistFrame.scrollBar:SetValueStep(1)
-    blacklistFrame.scrollBar:SetObeyStepOnDrag(true)
     blacklistFrame.scrollBar:SetScript("OnValueChanged", function(_, value)
         if blacklistFrame._updatingScroll then
             return
