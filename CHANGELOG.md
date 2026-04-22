@@ -1,6 +1,10 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.6 (22/04/2026)
+
+- Updated the addon interface version for WoW Retail `120005`
+
 ## Version 1.0.5 (20/04/2026)
 
 - Added a slimmer gold-styled scrollbar for the main list and blacklist window
