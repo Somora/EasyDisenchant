@@ -2,7 +2,7 @@
 ## Title: Somora's EasyDisenchant
 ## Notes: Fast disenchant, mill, and prospect helper.
 ## Author: Somora
-## Version: 1.0.6
+## Version: 1.0.7
 ## SavedVariables: EasyDisenchantDB
 ## IconTexture: Interface\Icons\INV_Enchant_Disenchant
 ## AddonCompartmentFunc: EasyDisenchant_AddonCompartmentClick

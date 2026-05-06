@@ -1,6 +1,10 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.7 (06/05/2026)
+
+- Added support for disenchantable profession gear in bag detection
+
 ## Version 1.0.6 (22/04/2026)
 
 - Updated the addon interface version for WoW Retail `120005`

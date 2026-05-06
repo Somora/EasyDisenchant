@@ -72,7 +72,15 @@ local ACTIONS = {
         label = "Disenchant",
         fallbackSpell = ResolveSpellName(13262, "Disenchant"),
         canUseItem = function(item)
-            return item.classID == Enum.ItemClass.Armor or item.classID == Enum.ItemClass.Weapon
+            if item.classID == Enum.ItemClass.Armor or item.classID == Enum.ItemClass.Weapon then
+                return true
+            end
+
+            if item.classID == Enum.ItemClass.Profession then
+                return true
+            end
+
+            return item.equipLoc == "INVTYPE_PROFESSION_TOOL" or item.equipLoc == "INVTYPE_PROFESSION_GEAR"
         end,
     },
     MILL = {
@@ -186,6 +194,7 @@ local function BuildItemData(bagID, slotID)
     end
 
     local isWarband = IsWarbandItem(location)
+    local _, _, _, itemEquipLoc = GetItemInfoInstant(itemLink)
 
     return {
         key = bagID .. ":" .. slotID,
@@ -200,6 +209,7 @@ local function BuildItemData(bagID, slotID)
         itemLevel = C_Item.GetCurrentItemLevel(location) or itemLevel or 0,
         classID = classID,
         subclassID = subclassID,
+        equipLoc = itemEquipLoc,
         vendorPrice = vendorPrice or 0,
         bindType = bindType,
         bindTypeText = isWarband and "Warband" or GetBindTypeText(bindType),
