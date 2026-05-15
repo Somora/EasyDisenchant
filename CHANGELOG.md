@@ -1,6 +1,11 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.8 (15/05/2026)
+
+- Added optional `Slot` and `Track` columns for disenchantable gear
+- Improved list spacing and alignment for the new overview columns
+
 ## Version 1.0.7 (06/05/2026)
 
 - Added support for disenchantable profession gear in bag detection

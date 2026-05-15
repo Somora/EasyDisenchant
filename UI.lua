@@ -6,13 +6,15 @@ local BLACKLIST_ROWS = 10
 local FILTER_GAP = 20
 local FILTER_LABEL_Y = -14
 local FILTER_CONTROL_Y = -34
-local NAME_WIDTH = 280
-local ILVL_WIDTH = 42
+local NAME_WIDTH = 184
+local SLOT_WIDTH = 40
+local TRACK_WIDTH = 50
+local ILVL_WIDTH = 38
 local MONEY_WIDTH = 28
 local MONEY_GAP = 2
 local ACTION_WIDTH = 24
 local BLACKLIST_WIDTH = 18
-local RIGHT_PADDING = 4
+local RIGHT_PADDING = 6
 
 local function ClampScrollOffset(offset, maxOffset)
     return math.min(math.max(0, floor(offset or 0)), math.max(0, maxOffset or 0))
@@ -206,6 +208,8 @@ local function ClearRow(row)
     row:SetAlpha(0)
     row.icon:SetTexture(nil)
     row.name:SetText("")
+    row.slot:SetText("")
+    row.track:SetText("")
     row.itemLevel:SetText("")
     row.bind:SetText("")
     row.gold:SetText("")
@@ -336,8 +340,18 @@ local function CreateListRow(parent, width)
     row.name:SetWidth(NAME_WIDTH)
     row.name:SetJustifyH("LEFT")
 
+    row.slot = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    row.slot:SetPoint("LEFT", row.name, "RIGHT", 6, 0)
+    row.slot:SetWidth(SLOT_WIDTH)
+    row.slot:SetJustifyH("LEFT")
+
+    row.track = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    row.track:SetPoint("LEFT", row.slot, "RIGHT", 6, 0)
+    row.track:SetWidth(TRACK_WIDTH)
+    row.track:SetJustifyH("LEFT")
+
     row.itemLevel = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.itemLevel:SetPoint("LEFT", row.name, "RIGHT", 12, 0)
+    row.itemLevel:SetPoint("LEFT", row.track, "RIGHT", 10, 0)
     row.itemLevel:SetWidth(ILVL_WIDTH)
     row.itemLevel:SetJustifyH("RIGHT")
 
@@ -380,7 +394,7 @@ local function CreateListRow(parent, width)
         end
     end)
 
-    row.gold, row.silver, row.copper = CreateMoneyColumns(row, -(RIGHT_PADDING + BLACKLIST_WIDTH + 8 + ACTION_WIDTH + 8 + MONEY_WIDTH * 2 + MONEY_GAP * 2))
+    row.gold, row.silver, row.copper = CreateMoneyColumns(row, -(RIGHT_PADDING + BLACKLIST_WIDTH + 10 + ACTION_WIDTH + 10 + MONEY_WIDTH * 2 + MONEY_GAP * 2))
 
     row.bind = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     row.bind:SetPoint("RIGHT", row.gold, "LEFT", -10, 0)
@@ -427,6 +441,8 @@ local function UpdateRow(row, item, isSelected, showReason)
     row:SetAlpha(1)
     row.icon:SetTexture(item.icon or 134400)
     row.name:SetText(item.name or UNKNOWN)
+    row.slot:SetText(item.slotText or "")
+    row.track:SetText(item.trackText or "")
     row.itemLevel:SetText(item.itemLevel or 0)
     row.bind:SetText(item.bindTypeText or "")
     ApplyMoneyColumns(row.gold, row.silver, row.copper, item.vendorPrice or 0)
@@ -447,12 +463,16 @@ local function ShouldShowBindColumn()
     return EasyDisenchantDB and EasyDisenchantDB.filters and EasyDisenchantDB.filters.bindType ~= "ALL"
 end
 
+local function ShouldShowDisenchantColumns()
+    return EasyDisenchantDB and EasyDisenchantDB.selectedAction == "DISENCHANT"
+end
+
 local function LayoutMoneyColumns(row, showBindColumn)
     row.gold:ClearAllPoints()
     row.silver:ClearAllPoints()
     row.copper:ClearAllPoints()
 
-    local copperRight = -(RIGHT_PADDING + BLACKLIST_WIDTH + 8 + ACTION_WIDTH + 10)
+    local copperRight = -(RIGHT_PADDING + BLACKLIST_WIDTH + 10 + ACTION_WIDTH + 12)
     local silverRight = copperRight - MONEY_WIDTH - MONEY_GAP
     local goldRight = silverRight - MONEY_WIDTH - MONEY_GAP
 
@@ -468,12 +488,16 @@ end
 local function LayoutHeaderColumns(frame, showBindColumn)
     frame.headerValue:ClearAllPoints()
     frame.headerIlvl:ClearAllPoints()
+    frame.headerSlot:ClearAllPoints()
+    frame.headerTrack:ClearAllPoints()
     frame.headerBind:ClearAllPoints()
     frame.headerAction:ClearAllPoints()
     frame.headerBlacklist:ClearAllPoints()
     frame.headerBlacklist:SetPoint("CENTER", frame.rows[1].blacklistButton, "CENTER", 0, 24)
     frame.headerAction:SetPoint("CENTER", frame.rows[1].actionButton, "CENTER", 0, 24)
     frame.headerIlvl:SetPoint("CENTER", frame.rows[1].itemLevel, "CENTER", 0, 24)
+    frame.headerSlot:SetPoint("CENTER", frame.rows[1].slot, "CENTER", 0, 24)
+    frame.headerTrack:SetPoint("CENTER", frame.rows[1].track, "CENTER", 0, 24)
 
     if showBindColumn then
         frame.headerValue:SetPoint("CENTER", frame.rows[1].silver, "CENTER", 12, 24)
@@ -809,6 +833,7 @@ function addon:RefreshUI()
 
     local selectedItem = self:GetSelectedItem()
     local showBindColumn = ShouldShowBindColumn()
+    local showDisenchantColumns = ShouldShowDisenchantColumns()
     local showRarityFilter = ShouldShowRarityFilter()
     local showBindFilter = ShouldShowBindFilterSelector()
     local showItemLevelFilter = ShouldShowItemLevelFilter()
@@ -820,6 +845,8 @@ function addon:RefreshUI()
         local item = self.state.items[index + offset]
         UpdateRow(row, item, selectedItem and item and item.key == selectedItem.key, false)
         LayoutMoneyColumns(row, showBindColumn)
+        row.slot:SetShown(showDisenchantColumns and item ~= nil)
+        row.track:SetShown(showDisenchantColumns and item ~= nil)
         row.bind:SetShown(showBindColumn and item ~= nil)
     end
 
@@ -845,6 +872,8 @@ function addon:RefreshUI()
     else
         self.mainFrame.emptyState:Hide()
     end
+    self.mainFrame.headerSlot:SetShown(showDisenchantColumns)
+    self.mainFrame.headerTrack:SetShown(showDisenchantColumns)
     self.mainFrame.headerBind:SetShown(showBindColumn)
     LayoutHeaderColumns(self.mainFrame, showBindColumn)
     self.mainFrame.rarityLabel:SetShown(showRarityFilter)
@@ -1038,8 +1067,20 @@ function addon:InitializeUI()
     frame.headerName:EnableMouse(true)
     AttachHeaderTooltip(frame.headerName, "Item", "The item that can be used for the selected profession action.")
 
+    frame.headerSlot = frame.listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    frame.headerSlot:SetPoint("TOPLEFT", 220, -14)
+    frame.headerSlot:SetText("Slot")
+    frame.headerSlot:EnableMouse(true)
+    AttachHeaderTooltip(frame.headerSlot, "Slot", "The equipment slot of the item, such as Ring, Neck, Trinket, or Tool.")
+
+    frame.headerTrack = frame.listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    frame.headerTrack:SetPoint("TOPLEFT", 278, -14)
+    frame.headerTrack:SetText("Track")
+    frame.headerTrack:EnableMouse(true)
+    AttachHeaderTooltip(frame.headerTrack, "Track", "The current upgrade track of the item, such as Adv, Vet, Champ, Hero, or Myth.")
+
     frame.headerIlvl = frame.listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    frame.headerIlvl:SetPoint("TOPLEFT", 286, -14)
+    frame.headerIlvl:SetPoint("TOPLEFT", 348, -14)
     frame.headerIlvl:SetText("iLvl")
     frame.headerIlvl:EnableMouse(true)
     AttachHeaderTooltip(frame.headerIlvl, "iLvl", "The current item level of the item.")

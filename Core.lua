@@ -144,6 +144,43 @@ local FILTER_REASON_LABELS = {
     BLACKLIST = "Blacklist",
 }
 
+local SLOT_LABELS = {
+    INVTYPE_HEAD = "Head",
+    INVTYPE_NECK = "Neck",
+    INVTYPE_SHOULDER = "Shoulder",
+    INVTYPE_CLOAK = "Back",
+    INVTYPE_CHEST = "Chest",
+    INVTYPE_ROBE = "Chest",
+    INVTYPE_WRIST = "Wrist",
+    INVTYPE_HAND = "Hands",
+    INVTYPE_WAIST = "Waist",
+    INVTYPE_LEGS = "Legs",
+    INVTYPE_FEET = "Feet",
+    INVTYPE_FINGER = "Ring",
+    INVTYPE_TRINKET = "Trink",
+    INVTYPE_SHIELD = "Shield",
+    INVTYPE_HOLDABLE = "Offhand",
+    INVTYPE_WEAPON = "1H",
+    INVTYPE_2HWEAPON = "2H",
+    INVTYPE_WEAPONMAINHAND = "Mainhand",
+    INVTYPE_WEAPONOFFHAND = "Offhand",
+    INVTYPE_RANGED = "Ranged",
+    INVTYPE_RANGEDRIGHT = "Ranged",
+    INVTYPE_THROWN = "Thrown",
+    INVTYPE_RELIC = "Relic",
+    INVTYPE_PROFESSION_TOOL = "Tool",
+    INVTYPE_PROFESSION_GEAR = "Acc",
+}
+
+local TRACK_LABELS = {
+    { pattern = "Explorer%s+%d+/%d+", label = "Expl" },
+    { pattern = "Adventurer%s+%d+/%d+", label = "Adv" },
+    { pattern = "Veteran%s+%d+/%d+", label = "Vet" },
+    { pattern = "Champion%s+%d+/%d+", label = "Champ" },
+    { pattern = "Hero%s+%d+/%d+", label = "Hero" },
+    { pattern = "Myth%s+%d+/%d+", label = "Myth" },
+}
+
 function addon.FormatMoneyParts(value)
     local gold = floor(value / (COPPER_PER_SILVER * SILVER_PER_GOLD))
     local silver = floor((value % (COPPER_PER_SILVER * SILVER_PER_GOLD)) / COPPER_PER_SILVER)
@@ -172,6 +209,38 @@ local function IsWarbandItem(location)
     return false
 end
 
+local function GetSlotText(equipLoc)
+    if not equipLoc or equipLoc == "" then
+        return ""
+    end
+    return SLOT_LABELS[equipLoc] or ""
+end
+
+local function GetTrackText(bagID, slotID)
+    if not C_TooltipInfo or not C_TooltipInfo.GetBagItem then
+        return ""
+    end
+
+    local tooltipData = C_TooltipInfo.GetBagItem(bagID, slotID)
+    local lines = tooltipData and tooltipData.lines
+    if not lines then
+        return ""
+    end
+
+    for _, line in ipairs(lines) do
+        local leftText = line and line.leftText
+        if leftText and leftText ~= "" then
+            for _, track in ipairs(TRACK_LABELS) do
+                if string.match(leftText, track.pattern) then
+                    return track.label
+                end
+            end
+        end
+    end
+
+    return ""
+end
+
 local function BuildItemData(bagID, slotID)
     local location = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
     if not C_Item.DoesItemExist(location) then
@@ -195,6 +264,12 @@ local function BuildItemData(bagID, slotID)
 
     local isWarband = IsWarbandItem(location)
     local _, _, _, itemEquipLoc = GetItemInfoInstant(itemLink)
+    local itemSlotText = ""
+    local itemTrackText = ""
+    if EasyDisenchantDB and EasyDisenchantDB.selectedAction == "DISENCHANT" then
+        itemSlotText = GetSlotText(itemEquipLoc)
+        itemTrackText = GetTrackText(bagID, slotID)
+    end
 
     return {
         key = bagID .. ":" .. slotID,
@@ -210,6 +285,8 @@ local function BuildItemData(bagID, slotID)
         classID = classID,
         subclassID = subclassID,
         equipLoc = itemEquipLoc,
+        slotText = itemSlotText,
+        trackText = itemTrackText,
         vendorPrice = vendorPrice or 0,
         bindType = bindType,
         bindTypeText = isWarband and "Warband" or GetBindTypeText(bindType),
