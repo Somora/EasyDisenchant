@@ -1,6 +1,10 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.9 (17/06/2026)
+
+- Updated the addon interface version for WoW Retail `120007`
+
 ## Version 1.0.8 (15/05/2026)
 
 - Added optional `Slot` and `Track` columns for disenchantable gear
