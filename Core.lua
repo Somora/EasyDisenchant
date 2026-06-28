@@ -45,6 +45,7 @@ addon.defaults = {
         maxItemLevel = 9999,
         bindType = "ALL",
         search = "",
+        ignoreGearSets = false,
     },
     blacklist = {},
     selectedAction = "DISENCHANT",
@@ -142,6 +143,7 @@ local FILTER_REASON_LABELS = {
     BIND = "Bind",
     SEARCH = "Search",
     BLACKLIST = "Blacklist",
+    GEAR_SET = "Gear Set",
 }
 
 local SLOT_LABELS = {
@@ -301,6 +303,51 @@ local function MatchesSearch(item, text)
     return string.find(string.lower(item.name or ""), string.lower(text), 1, true) ~= nil
 end
 
+local function BuildGearSetLookup()
+    local lookup = {}
+
+    if not C_EquipmentSet or not C_EquipmentSet.GetEquipmentSetIDs or not C_EquipmentSet.GetItemLocations then
+        return lookup
+    end
+
+    local setIDs = C_EquipmentSet.GetEquipmentSetIDs() or {}
+    for _, setID in ipairs(setIDs) do
+        local rawLocations = { C_EquipmentSet.GetItemLocations(setID) }
+        local locations
+        if #rawLocations == 1 and type(rawLocations[1]) == "table" then
+            locations = rawLocations[1]
+        else
+            locations = rawLocations
+        end
+
+        for _, packedLocation in pairs(locations) do
+            if packedLocation and packedLocation > 0 then
+                local bags, bag, slot
+
+                if EquipmentManager_GetLocationData then
+                    local locationData = EquipmentManager_GetLocationData(packedLocation)
+                    if locationData then
+                        bags = locationData.isBags
+                        bag = locationData.bag
+                        slot = locationData.slot
+                    end
+                elseif EquipmentManager_UnpackLocation then
+                    local _, _, unpackBags, _, unpackSlot, unpackBag = EquipmentManager_UnpackLocation(packedLocation)
+                    bags = unpackBags
+                    bag = unpackBag
+                    slot = unpackSlot
+                end
+
+                if bags and bag and slot then
+                    lookup[bag .. ":" .. slot] = true
+                end
+            end
+        end
+    end
+
+    return lookup
+end
+
 local function MatchesFilters(item)
     local filters = EasyDisenchantDB.filters
     if EasyDisenchantDB.blacklist[item.itemID] then
@@ -310,6 +357,10 @@ local function MatchesFilters(item)
     local action = ACTIONS[EasyDisenchantDB.selectedAction]
     if not action or not action.canUseItem(item) then
         return false, "ACTION"
+    end
+
+    if filters.ignoreGearSets and item.inGearSet then
+        return false, "GEAR_SET"
     end
 
     if filters.rarity == "ALL" and EasyDisenchantDB.selectedAction == "DISENCHANT" and item.quality < 2 then
@@ -353,12 +404,14 @@ function addon:RefreshItems()
     wipe(self.state.filteredOut)
     self.state.blacklistedCount = 0
     wipe(self.state.filteredReasonCounts)
+    local gearSetLookup = BuildGearSetLookup()
 
     for _, bagID in ipairs(BAG_IDS) do
         local numSlots = C_Container.GetContainerNumSlots(bagID) or 0
         for slotID = 1, numSlots do
             local item = BuildItemData(bagID, slotID)
             if item then
+                item.inGearSet = gearSetLookup[item.key] or false
                 if IsActionCandidate(item) then
                     local ok, reason = MatchesFilters(item)
                     if ok then

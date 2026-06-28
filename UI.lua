@@ -343,17 +343,17 @@ local function CreateListRow(parent, width)
     row.slot = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     row.slot:SetPoint("LEFT", row.name, "RIGHT", 6, 0)
     row.slot:SetWidth(SLOT_WIDTH)
-    row.slot:SetJustifyH("LEFT")
+    row.slot:SetJustifyH("CENTER")
 
     row.track = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     row.track:SetPoint("LEFT", row.slot, "RIGHT", 6, 0)
     row.track:SetWidth(TRACK_WIDTH)
-    row.track:SetJustifyH("LEFT")
+    row.track:SetJustifyH("CENTER")
 
     row.itemLevel = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     row.itemLevel:SetPoint("LEFT", row.track, "RIGHT", 10, 0)
     row.itemLevel:SetWidth(ILVL_WIDTH)
-    row.itemLevel:SetJustifyH("RIGHT")
+    row.itemLevel:SetJustifyH("CENTER")
 
     row.actionButton = CreateFrame("Button", nil, row, "SecureActionButtonTemplate,UIPanelButtonTemplate")
     row.actionButton:SetSize(ACTION_WIDTH, 18)
@@ -737,6 +737,9 @@ function addon:RefreshFilterSelectors()
     if self.mainFrame.bindSelector then
         SetSelectorValue(self.mainFrame.bindSelector, GetBindFilterLabel(EasyDisenchantDB.filters.bindType), EasyDisenchantDB.filters.bindType)
     end
+    if self.mainFrame.ignoreGearSetsCheck then
+        self.mainFrame.ignoreGearSetsCheck:SetChecked(EasyDisenchantDB.filters.ignoreGearSets)
+    end
 end
 
 function addon:HideSelectorMenus()
@@ -761,6 +764,10 @@ local function ShouldShowBindFilterSelector()
 end
 
 local function ShouldShowItemLevelFilter()
+    return EasyDisenchantDB and EasyDisenchantDB.selectedAction == "DISENCHANT"
+end
+
+local function ShouldShowGearSetFilter()
     return EasyDisenchantDB and EasyDisenchantDB.selectedAction == "DISENCHANT"
 end
 
@@ -837,6 +844,7 @@ function addon:RefreshUI()
     local showRarityFilter = ShouldShowRarityFilter()
     local showBindFilter = ShouldShowBindFilterSelector()
     local showItemLevelFilter = ShouldShowItemLevelFilter()
+    local showGearSetFilter = ShouldShowGearSetFilter()
     local maxOffset = math.max(0, #self.state.items - VISIBLE_ROWS)
     local offset = ClampScrollOffset(self.state.mainScrollOffset, maxOffset)
     self.state.mainScrollOffset = offset
@@ -885,6 +893,10 @@ function addon:RefreshUI()
     self.mainFrame.rangeDash:SetShown(showItemLevelFilter)
     self.mainFrame.maxLevel:SetShown(showItemLevelFilter)
     self.mainFrame.maxLevelHint:SetShown(showItemLevelFilter)
+    self.mainFrame.ignoreGearSetsCheck:SetShown(showGearSetFilter)
+    if self.mainFrame.ignoreGearSetsCheck.text then
+        self.mainFrame.ignoreGearSetsCheck.text:SetShown(showGearSetFilter)
+    end
 
     if self.mainFrame.scrollBar then
         self.mainFrame._updatingScroll = true
@@ -1043,6 +1055,27 @@ function addon:InitializeUI()
     frame.maxLevelHint = frame.filterPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     frame.maxLevelHint:SetPoint("LEFT", frame.maxLevel, "RIGHT", 8, 0)
     frame.maxLevelHint:SetText("blank = no limit")
+
+    frame.ignoreGearSetsCheck = CreateFrame("CheckButton", nil, frame.filterPanel, "UICheckButtonTemplate")
+    frame.ignoreGearSetsCheck:SetPoint("TOPLEFT", frame.rangeLabel, "BOTTOMLEFT", -2, -6)
+    frame.ignoreGearSetsCheck:SetScale(0.82)
+    frame.ignoreGearSetsCheck.text = frame.ignoreGearSetsCheck:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ignoreGearSetsCheck.text:SetPoint("LEFT", frame.ignoreGearSetsCheck, "RIGHT", 5, 0)
+    frame.ignoreGearSetsCheck.text:SetText("Ignore gear set items")
+    frame.ignoreGearSetsCheck:SetChecked(EasyDisenchantDB.filters.ignoreGearSets)
+    frame.ignoreGearSetsCheck:SetScript("OnClick", function(selfCheck)
+        EasyDisenchantDB.filters.ignoreGearSets = selfCheck:GetChecked() and true or false
+        addon:RefreshItems()
+    end)
+    frame.ignoreGearSetsCheck:SetScript("OnEnter", function(selfCheck)
+        GameTooltip:SetOwner(selfCheck, "ANCHOR_TOPLEFT")
+        GameTooltip:AddLine("Ignore gear set items")
+        GameTooltip:AddLine("Exclude items that are part of Blizzard equipment sets from the disenchant list.", 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    frame.ignoreGearSetsCheck:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
 
     local function CommitNumericFilters()
         EasyDisenchantDB.filters.minItemLevel = tonumber(frame.minLevel:GetText()) or 1
