@@ -1,6 +1,10 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.11 (12/08/2026)
+
+- Updated the addon interface version for WoW Retail `120100`
+
 ## Version 1.0.10 (28/06/2026)
 
 - Added an `Ignore gear set items` filter for disenchanting
