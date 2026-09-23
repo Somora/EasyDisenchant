@@ -1,6 +1,12 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.12 (23/09/2026)
+
+- Added `/click EasyDisenchant_Action` access to the main action button
+- Added a `Show minimap icon` checkbox under Settings > AddOns > EasyDisenchant
+- Corrected the Addon Compartment tooltip for Shift-clicking to toggle the minimap icon
+
 ## Version 1.0.11 (12/08/2026)
 
 - Updated the addon interface version for WoW Retail `120100`

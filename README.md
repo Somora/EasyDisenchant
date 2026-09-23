@@ -10,7 +10,7 @@ EasyDisenchant is a Retail World of Warcraft addon for quickly handling `Disench
 - Compact `Use` button per row for direct action
 - Per-item blacklist button in the main list
 - Separate blacklist management window
-- Minimap button
+- Minimap button, with a visibility checkbox under Settings > AddOns > EasyDisenchant
 - Addon Compartment support
 - Keybindings under `EasyDisenchant`
 - Combat lock overlay to prevent protected-action issues
@@ -24,6 +24,16 @@ EasyDisenchant is a Retail World of Warcraft addon for quickly handling `Disench
 - `/sde minimap`
 - `/sde resetpos`
 - `/sde help`
+
+## Action macro
+
+The main action button can be clicked from a macro:
+
+```text
+/click EasyDisenchant_Action
+```
+
+Select an item and action in the EasyDisenchant window first. Each macro activation uses the current selection, just like clicking the main action button; it does not process all items automatically.
 
 ## Keybindings
 
@@ -45,6 +55,8 @@ Note: profession spell-on-item actions are performed through the secure in-windo
   - Left-click: toggle main window
   - Right-click: toggle blacklist
   - Shift-click: reset minimap button position
+- Under Settings > AddOns > EasyDisenchant, uncheck `Show minimap icon` to hide it immediately. The preference is saved between sessions.
+- Shift-click the EasyDisenchant entry in the Addon Compartment to toggle the minimap icon, or use `/sde minimap` to restore it.
 
 ## Installation
 
@@ -55,4 +67,4 @@ Note: profession spell-on-item actions are performed through the secure in-windo
 
 ## Version
 
-Current release: `1.0.11`
+Current release: `1.0.12`

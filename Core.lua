@@ -732,6 +732,7 @@ function addon:ADDON_LOADED(loadedAddon)
         self:InitializeUI()
     end
     self:RegisterMinimapLauncher()
+    self:RegisterSettings()
     self:RefreshItems()
 end
 
@@ -801,7 +802,7 @@ function EasyDisenchant_AddonCompartmentEnter(_, menuButtonFrame)
             tooltip:AddLine("EasyDisenchant")
             tooltip:AddLine("Left-click: toggle main window", 1, 1, 1)
             tooltip:AddLine("Right-click: toggle blacklist", 1, 1, 1)
-            tooltip:AddLine("Shift-click: reset minimap button position", 1, 1, 1)
+            tooltip:AddLine("Shift-click: toggle minimap icon", 1, 1, 1)
         end)
     end
 end

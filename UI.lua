@@ -783,10 +783,48 @@ local function ApplyActionButtonText()
     end
 end
 
+function addon:RegisterSettings()
+    if self.settingsCategory then
+        return
+    end
+
+    local panel = CreateFrame("Frame")
+    panel:Hide()
+
+    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("TOPLEFT", 16, -16)
+    title:SetText("EasyDisenchant")
+
+    local check = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+    check:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -16)
+    check.text = check:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    check.text:SetPoint("LEFT", check, "RIGHT", 4, 0)
+    check.text:SetText("Show minimap icon")
+    check:SetScript("OnClick", function(selfCheck)
+        EasyDisenchantDB.minimap.hide = not selfCheck:GetChecked()
+        addon:RefreshMinimapButton()
+    end)
+    panel:SetScript("OnShow", function()
+        check:SetChecked(not EasyDisenchantDB.minimap.hide)
+    end)
+
+    local hint = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    hint:SetPoint("TOPLEFT", check, "BOTTOMLEFT", 4, -12)
+    hint:SetText("Use /sde to open EasyDisenchant even when the minimap icon is hidden.")
+
+    self.minimapSettingsCheck = check
+    self.settingsCategory = Settings.RegisterCanvasLayoutCategory(panel, "EasyDisenchant")
+    Settings.RegisterAddOnCategory(self.settingsCategory)
+end
+
 function addon:RefreshMinimapButton()
     local ldbIcon = LibStub and LibStub("LibDBIcon-1.0", true)
     if not ldbIcon or not EasyDisenchantDB or not EasyDisenchantDB.minimap then
         return
+    end
+
+    if self.minimapSettingsCheck then
+        self.minimapSettingsCheck:SetChecked(not EasyDisenchantDB.minimap.hide)
     end
 
     if EasyDisenchantDB.minimap.hide then
@@ -1173,7 +1211,7 @@ function addon:InitializeUI()
     frame.filteredTitle:SetText("Filtered items")
     frame.filteredTitle:Hide()
 
-    frame.actionButton = CreateFrame("Button", nil, frame, "SecureActionButtonTemplate,UIPanelButtonTemplate")
+    frame.actionButton = CreateFrame("Button", "EasyDisenchant_Action", frame, "SecureActionButtonTemplate,UIPanelButtonTemplate")
     frame.actionButton:SetSize(120, 24)
     frame.actionButton:SetPoint("BOTTOMRIGHT", -18, 18)
     StylePrimaryActionButton(frame.actionButton)
