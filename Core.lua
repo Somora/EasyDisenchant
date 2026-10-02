@@ -259,13 +259,12 @@ local function BuildItemData(bagID, slotID)
         return nil
     end
 
-    local itemName, _, itemQuality, itemLevel, _, _, _, _, _, itemTexture, vendorPrice, classID, subclassID, bindType = C_Item.GetItemInfo(itemLink)
+    local itemName, _, itemQuality, itemLevel, _, _, _, _, itemEquipLoc, itemTexture, vendorPrice, classID, subclassID, bindType = C_Item.GetItemInfo(itemLink)
     if not itemName then
         return nil
     end
 
     local isWarband = IsWarbandItem(location)
-    local _, _, _, itemEquipLoc = GetItemInfoInstant(itemLink)
     local itemSlotText = ""
     local itemTrackText = ""
     if EasyDisenchantDB and EasyDisenchantDB.selectedAction == "DISENCHANT" then

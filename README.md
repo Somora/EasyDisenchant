@@ -1,6 +1,13 @@
 # EasyDisenchant
 
-EasyDisenchant is a Retail World of Warcraft addon for quickly handling `Disenchant`, `Mill`, and `Prospect` actions from one compact window.
+EasyDisenchant is a World of Warcraft addon for quickly handling `Disenchant`, `Mill`, and `Prospect` actions from one compact window, targeting Retail and WoW: Forever.
+
+## Client compatibility
+
+- Retail: interface `120100` (12.1.0).
+- WoW: Forever beta: interface `16001` (1.60.1).
+- Both clients use the same addon files and modern item APIs. Available profession actions depend on the spells your character has learned.
+- Forever compatibility has been checked against the client UI source and basic in-game UI testing. Full profession-action testing is still pending; beta updates may require further changes.
 
 ## Features
 
@@ -65,6 +72,8 @@ Note: profession spell-on-item actions are performed through the secure in-windo
 2. Make sure the `.toc` file is directly inside the `EasyDisenchant` folder
 3. Restart WoW or reload the UI
 
+For WoW: Forever beta, place the addon in `World of Warcraft\_classic_beta_\Interface\AddOns\EasyDisenchant\`. Restart the client after first installing the addon.
+
 ## Version
 
-Current release: `1.0.12`
+Current release: `1.0.13`

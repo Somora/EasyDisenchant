@@ -853,7 +853,7 @@ function addon:RefreshBlacklistUI()
             row:Show()
             row.itemID = entry.itemID
             row.name:SetText(tostring(entry.label))
-            local quality = select(3, GetItemInfo(entry.itemID))
+            local quality = select(3, C_Item.GetItemInfo(entry.itemID))
             local color = ITEM_QUALITY_COLORS[quality or 1] or NORMAL_FONT_COLOR
             row.name:SetTextColor(color.r, color.g, color.b)
         else
@@ -947,6 +947,7 @@ end
 
 function addon:InitializeUI()
     local frame = CreateFrame("Frame", "EasyDisenchantFrame", UIParent, "BackdropTemplate")
+    frame:SetFrameStrata("DIALOG")
     frame:SetSize(650, 528)
     frame:SetPoint("CENTER")
     frame:SetMovable(true)

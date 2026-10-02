@@ -1,6 +1,13 @@
 # EasyDisenchant Changelog
 All notable changes to this project will be documented in this file.
 
+## Version 1.0.13 (02/10/2026)
+
+- Raised the main window above normal HUD and unit frames
+- Added WoW: Forever beta 1.60.1 (`16001`) to the supported client interfaces
+- Removed legacy global item API calls from bag scanning and blacklist display in favor of the shared `C_Item` API
+- Updated installation instructions for the Forever beta client
+
 ## Version 1.0.12 (23/09/2026)
 
 - Added `/click EasyDisenchant_Action` access to the main action button
